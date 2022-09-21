@@ -12,6 +12,8 @@
 
 **How To Play**:
 
-Z(outward)/X(inward) to move the hitbox along the clock arm, SPACEBAR to hit the note when the arm rotation and hitbox position matches the note.
+- RETURN to start playing
+- Z(outward)/X(inward) to move the hitbox along the clock arm
+- SPACEBAR to hit the note when the arm rotation and hitbox position matches the note
 
 This game was built with [NEST](NEST.md).
