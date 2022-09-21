@@ -52,7 +52,7 @@ struct PlayMode : Mode {
 	Scene::Transform *gear_transform = nullptr;
 	Scene::Transform *hitbox_transform = nullptr;
 
-	uint16_t score = 0;
+	float score = 0;
 	uint16_t notes_hit = 0;
 	
 	static const uint16_t num_notes = 60;

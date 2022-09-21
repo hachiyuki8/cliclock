@@ -339,11 +339,11 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 
-		lines.draw_text("Current Score - " + std::to_string(score) + " | Notes Hit - " + std::to_string(notes_hit) + "/" + std::to_string(num_notes),
+		lines.draw_text("Current Score - " + std::to_string((int) score) + " | Notes Hit - " + std::to_string(notes_hit) + "/" + std::to_string(num_notes),
 			glm::vec3(-aspect + 0.1f * H, 0.8f, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0x00, 0x00, 0x00, 0x00));
-		lines.draw_text("Current Score - " + std::to_string(score) + " | Notes Hit - " + std::to_string(notes_hit) + "/" + std::to_string(num_notes),
+		lines.draw_text("Current Score - " + std::to_string((int) score) + " | Notes Hit - " + std::to_string(notes_hit) + "/" + std::to_string(num_notes),
 			glm::vec3(-aspect + 0.1f * H + ofs, 0.8f + ofs, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
