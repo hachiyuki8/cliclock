@@ -12,12 +12,15 @@
 
 #include <random>
 #include <math.h>
+#include <cstdlib>
 
 const std::string CLOCK = "Clock";
 const std::string ARM = "Arm";
 const std::string GEAR = "Gear";
 const std::string HITBOX = "Hitbox";
 const std::string NOTE = "Note2";
+
+const float SONG_LENGTH = 57.59f;
 
 const float HITBOX_MOVEMENT_OUTWARD_BOUND = -1.85f;
 const float HITBOX_MOVEMENT_INWARD_BOUND = -0.4f;
@@ -216,10 +219,13 @@ void PlayMode::update_note() {
 
 void PlayMode::hit_note() {
 	for (uint16_t i = 0; i < num_notes; i++) {
-		float position_diff = notes_distance[i] + hitbox_transform->position.z * NOTE_TO_HITBOX_RATIO;
+		float position_diff = std::abs(notes_distance[i] + hitbox_transform->position.z * NOTE_TO_HITBOX_RATIO);
 		if (notes[i] * BEAT_SPEED - HIT_TIME <= global_timer && global_timer <= notes[i] * BEAT_SPEED + HIT_TIME
-			&& note_hit_time[i] == 0.0f && -MAX_NOTE_TO_HITBOX_DIST <= position_diff && position_diff <= MAX_NOTE_TO_HITBOX_DIST) {
+			&& note_hit_time[i] == 0.0f && position_diff <= MAX_NOTE_TO_HITBOX_DIST) {
 			note_hit_time[i] = global_timer;
+			notes_hit += 1;
+			score += (MAX_NOTE_TO_HITBOX_DIST - position_diff) * 100;
+			score += (HIT_TIME - std::abs(global_timer - notes[i] * BEAT_SPEED)) * 50;
 		}
 	}
 }
@@ -227,31 +233,10 @@ void PlayMode::hit_note() {
 bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
 
 	if (evt.type == SDL_KEYDOWN) {
-		if (evt.key.keysym.sym == SDLK_ESCAPE) {
-			SDL_SetRelativeMouseMode(SDL_FALSE);
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_a) {
-			left.downs += 1;
-			left.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_d) {
-			right.downs += 1;
-			right.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_w) {
-			up.downs += 1;
-			up.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_s) {
-			down.downs += 1;
-			down.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_z) {
-			outward.downs += 1;
+		if (evt.key.keysym.sym == SDLK_z) {
 			outward.pressed = true;
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_x) {
-			inward.downs += 1;
 			inward.pressed = true;
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_RETURN) {
@@ -267,41 +252,11 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			}
 		}
 	} else if (evt.type == SDL_KEYUP) {
-		if (evt.key.keysym.sym == SDLK_a) {
-			left.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_d) {
-			right.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_w) {
-			up.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_s) {
-			down.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_z) {
+		if (evt.key.keysym.sym == SDLK_z) {
 			outward.pressed = false;
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_x) {
 			inward.pressed = false;
-			return true;
-		}
-	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
-		if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
-			SDL_SetRelativeMouseMode(SDL_TRUE);
-			return true;
-		}
-	} else if (evt.type == SDL_MOUSEMOTION) {
-		if (SDL_GetRelativeMouseMode() == SDL_TRUE) {
-			glm::vec2 motion = glm::vec2(
-				evt.motion.xrel / float(window_size.y),
-				-evt.motion.yrel / float(window_size.y)
-			);
-			camera->transform->rotation = glm::normalize(
-				camera->transform->rotation
-				* glm::angleAxis(-motion.x * camera->fovy, glm::vec3(0.0f, 1.0f, 0.0f))
-				* glm::angleAxis(motion.y * camera->fovy, glm::vec3(1.0f, 0.0f, 0.0f))
-			);
 			return true;
 		}
 	}
@@ -321,6 +276,10 @@ void PlayMode::update(float elapsed) {
 
 	if (gameState == GameState::IN_PROGRESS) {
 		global_timer += elapsed;
+		if (global_timer >= SONG_LENGTH) {
+			gameState = GameState::END;
+			return;
+		}
 		gear_transform->rotation *= glm::angleAxis(
 			glm::radians(-ROTATION_SPEED*elapsed),
 			glm::vec3(0.0f, 0.0f, 1.0f)
@@ -336,36 +295,6 @@ void PlayMode::update(float elapsed) {
 		}
 		update_note();
 	}
-
-	//move camera:
-	{
-
-		//combine inputs into a move:
-		constexpr float PlayerSpeed = 30.0f;
-		glm::vec2 move = glm::vec2(0.0f);
-		if (left.pressed && !right.pressed) move.x =-1.0f;
-		if (!left.pressed && right.pressed) move.x = 1.0f;
-		if (down.pressed && !up.pressed) move.y =-1.0f;
-		if (!down.pressed && up.pressed) move.y = 1.0f;
-
-		//make it so that moving diagonally doesn't go faster:
-		if (move != glm::vec2(0.0f)) move = glm::normalize(move) * PlayerSpeed * elapsed;
-
-		glm::mat4x3 frame = camera->transform->make_local_to_parent();
-		glm::vec3 frame_right = frame[0];
-		//glm::vec3 up = frame[1];
-		glm::vec3 frame_forward = -frame[2];
-
-		camera->transform->position += move.x * frame_right + move.y * frame_forward;
-	}
-
-	//reset button press counters:
-	left.downs = 0;
-	right.downs = 0;
-	up.downs = 0;
-	down.downs = 0;
-	outward.downs = 0;
-	inward.downs = 0;
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
@@ -400,13 +329,22 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		));
 
 		constexpr float H = 0.09f;
-		lines.draw_text("Mouse motion rotates camera; WASD moves; escape ungrabs mouse",
+		lines.draw_text("RETURN - start | Z(outward)/X(inward) - move the hitbox | SPACEBAR - hit the note",
 			glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0x00, 0x00, 0x00, 0x00));
 		float ofs = 2.0f / drawable_size.y;
-		lines.draw_text("Mouse motion rotates camera; WASD moves; escape ungrabs mouse",
-			glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + + 0.1f * H + ofs, 0.0),
+		lines.draw_text("RETURN - start | Z(outward)/X(inward) - move the hitbox | SPACEBAR - hit the note",
+			glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + 0.1f * H + ofs, 0.0),
+			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+
+		lines.draw_text("Current Score - " + std::to_string(score) + " | Notes Hit - " + std::to_string(notes_hit) + "/" + std::to_string(num_notes),
+			glm::vec3(-aspect + 0.1f * H, 0.8f, 0.0),
+			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+			glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+		lines.draw_text("Current Score - " + std::to_string(score) + " | Notes Hit - " + std::to_string(notes_hit) + "/" + std::to_string(num_notes),
+			glm::vec3(-aspect + 0.1f * H + ofs, 0.8f + ofs, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 	}

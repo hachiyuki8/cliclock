@@ -36,7 +36,7 @@ struct PlayMode : Mode {
 	struct Button {
 		uint8_t downs = 0;
 		uint8_t pressed = 0;
-	} left, right, up, down, inward, outward, hit;
+	} inward, outward, hit;
 
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
@@ -53,6 +53,7 @@ struct PlayMode : Mode {
 	Scene::Transform *hitbox_transform = nullptr;
 
 	uint16_t score = 0;
+	uint16_t notes_hit = 0;
 	
 	static const uint16_t num_notes = 60;
 	Scene::Transform *note_transforms[num_notes];

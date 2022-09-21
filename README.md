@@ -1,15 +1,17 @@
-# (TODO: your game's title)
+# Cliclock
 
-Author: (TODO: your name)
+(shoutout to [TheNumbat](https://thenumb.at/) for naming idea)
 
-Design: (TODO: In two sentences or fewer, describe what is new and interesting about your game.)
+**Author**: Joanna Yao
 
-Screen Shot:
+**Design**: Rhythm game on a clock where you aim along the clock arm and hit the note with your keyboard.
+
+**Screen Shot**:
 
 ![Screen Shot](screenshot.png)
 
-How To Play:
+**How To Play**:
 
-(TODO: describe the controls and (if needed) goals/strategy.)
+Z(outward)/X(inward) to move the hitbox along the clock arm, SPACEBAR to hit the note when the arm rotation and hitbox position matches the note.
 
 This game was built with [NEST](NEST.md).
