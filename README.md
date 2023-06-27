@@ -2,7 +2,7 @@
 
 (shoutout to [TheNumbat](https://thenumb.at/) for naming idea)
 
-**Author**: Joanna Yao
+**Author**: Joanna Y
 
 **Design**: Rhythm game on a clock where you aim along the clock arm and hit the note with your keyboard.
 
